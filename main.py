@@ -30,22 +30,25 @@ def call_gemini(prompt):
 
 bullets = []
 text_content = None
+title_slide1 = ""
 
 def get_slide_content(slide_number, theory):
     global bullets
     global text_content
+    global title_slide1
 
     preset = slides_preset[slide_number]
 
     if preset == 'title':
-        title = call_gemini(f'Create an amazing title for the presentation about the theory: {theory}')
+        title_slide1 = call_gemini(f'Create an amazing title for the presentation about the theory: {theory}')
         intro_paragraph = call_gemini(f'Write a short 40-word introduction about the theory: {theory}. Use easy English, include some real evidence and some false made-up evidence, just for entertainment.')
-        return title, intro_paragraph
+        return title_slide1, intro_paragraph
     elif preset == 'bullets':
-        bullets_title = call_gemini(f'Create an amazing title for the presentation slide, the slide will contain bullets, so create a title for the bullets, theory title is {theory}')
+        bullets_title = title_slide1  # Use the same title as the first slide
+        bullets_title = bullets_title 
         bullets = []
-        for i in range(10):
-            bullet = call_gemini(f'Create a bullet point to prove this theory right in a fun way of course, anything can happen ;) , theory: {theory}. Use easy English, include some real evidence and some false made-up evidence, just for entertainment.')
+        for i in range(3):
+            bullet = call_gemini(f'Create a bullet point to prove this theory right in a fun way of course, anything can happen ;) , theory: {theory}. Use easy English, include some real evidence and some false made-up evidence, just for entertainment, make sure the word limit is 30 for it, something fun that would also make them a bit of laugh and convince them that it is the truth')
             bullets.append(bullet.replace('-', ' '))
         return bullets_title, bullets
     elif preset == 'text':
@@ -60,7 +63,7 @@ def get_slide_content(slide_number, theory):
 def get_theory():
     try:
         model = genai.GenerativeModel('gemini-pro')
-        response = model.generate_content("You are a conspiracy scientist who writes about conspiracies just for fun, and not in a serious way for kids books. Please suggest a conspiracy theory idea for a movie, only one string. Use easy English and ensure it is in English only.")
+        response = model.generate_content("You are a conspiracy scientist who writes about conspiracies just for fun, and not in a serious way for kids books. Please suggest a conspiracy theory idea for a movie, only one string. Use easy English.")
         text = response.text
         text = text.replace('*', ' ')
         return text
@@ -89,26 +92,16 @@ def generate_ppt():
             text_frame = slide.shapes.placeholders[1].text_frame
             text_frame.text = content
             text_frame.paragraphs[0].font.size = Pt(16)
+            # Add spacing between title and content
+            slide.shapes.placeholders[1].top = Inches(2)
         elif preset == 'bullets':
             slide.shapes.title.text = title
-            left_text_frame = slide.shapes.placeholders[1].text_frame
-            left_bullets = content[:5]
-            right_bullets = content[5:]
-            for bullet in left_bullets:
-                p = left_text_frame.add_paragraph()
+            slide.shapes.title.text_frame.paragraphs[0].font.size = Pt(19)
+            text_frame = slide.shapes.placeholders[1].text_frame
+            for bullet in content:
+                p = text_frame.add_paragraph()
                 p.text = bullet
-                p.font.size = Pt(14)
-            # Add a new textbox for the right bullets
-            left = Inches(5.5)
-            top = Inches(1.5)
-            width = Inches(4)
-            height = Inches(4.5)
-            textbox = slide.shapes.add_textbox(left, top, width, height)
-            right_text_frame = textbox.text_frame
-            for bullet in right_bullets:
-                p = right_text_frame.add_paragraph()
-                p.text = bullet
-                p.font.size = Pt(14)
+                p.font.size = Pt(16)
         elif preset == 'text':
             slide.shapes.title.text = "Details"
             text_frame = slide.shapes.placeholders[1].text_frame
@@ -136,7 +129,8 @@ def generate_ppt():
             p.text = "Thank You!"
             p.font.size = Pt(32)
             p.font.bold = True
-            p.alignment = PP_ALIGN.CENTER
+            
+            p.shadow = True
 
     prs.save('generated_presentation.pptx')
 
