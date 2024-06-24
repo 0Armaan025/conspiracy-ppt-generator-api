@@ -7,6 +7,9 @@ from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.util import Inches
 import logging
+import google.generativeai as genai
+
+
 
 load_dotenv()
 
