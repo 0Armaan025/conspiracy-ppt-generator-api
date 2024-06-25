@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 import anthropic
 import os
 from dotenv import load_dotenv
 from pptx import Presentation
-from pptx.util import Inches, Pt
 import logging
+from pptx.util import Inches, Pt
 import google.generativeai as genai
 import replicate
 import requests
@@ -16,7 +16,7 @@ app = Flask(__name__)
 client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
 gemini_api_key = os.getenv('GEMINI_API_KEY')
 genai.configure(api_key=gemini_api_key)
-replicate_api_token = os.getenv('REPLICATE_API_TOKEN')
+replicate_api_token = os.getenv('REPLICATE_API_KEY')
 replicate.Client(api_token=replicate_api_token)
 
 slides_preset = ['title', 'bullets', 'bullets', 'text', 'image', 'thanks']
@@ -72,7 +72,7 @@ def get_slide_content(slide_number, theory):
         num_bullets = 2  # 2 bullets on slide 2 and 3
         bullets = []
         for i in range(num_bullets):
-            bullet = call_gemini(f'Create a bullet point to prove this theory right in a fun way of course, anything can happen ;) , theory: {theory}. Use easy English, include some real evidence and some false made-up evidence, just for entertainment, make sure the word limit is 30 for it, something fun that would also make them a bit of laugh and convince them that it is the truth')
+            bullet = call_gemini(f'Create a bullet point to prove this theory right in a fun way of course, make up things as you want but convince the people that the theory is true ;) , theory: {theory}. Use easy English, include some real evidence and some false made-up evidence, just for entertainment, make sure the word limit is 30 for it, something fun that would also make them a bit of laugh and convince them that it is the truth')
             bullets.append(bullet.replace('-', ' '))
         return bullets_title, bullets
     elif preset == 'text':
@@ -130,7 +130,7 @@ def generate_ppt():
             slide.shapes.title.text = title
             slide.shapes.title.text_frame.paragraphs[0].font.size = Pt(18)  # Set the title font size for the bullet slide
             text_frame = slide.shapes.placeholders[1].text_frame
-            slide.shapes.placeholders[1].top = Inches(1.85)  # Move the bullets placeholder up
+            slide.shapes.placeholders[1].top = Inches(2)  # Move the bullets placeholder up
             slide.shapes.placeholders[1].width = Inches(9.5)  # Adjust the width of the text box
             for bullet in content:
                 p = text_frame.add_paragraph()
@@ -160,9 +160,12 @@ def generate_ppt():
             p.font.bold = True
             p.shadow = True
 
-    prs.save('generated_presentation.pptx')
+    # Save the presentation to a temporary file in memory
+    tmp_file = 'generated_presentation.pptx'
+    prs.save(tmp_file)
 
-    return jsonify({'message': 'Presentation generated and saved to local storage as generated_presentation.pptx'})
+    # Return the file as a response
+    return send_file(tmp_file, as_attachment=True)
 
 
 if __name__ == '__main__':
