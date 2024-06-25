@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import anthropic
 import os
 from dotenv import load_dotenv
@@ -31,8 +31,6 @@ def call_gemini(prompt):
     return text
 
 def generate_image(prompt, file_path):
-    
-    
     input = {
         "prompt": prompt,
         "width": 768,
@@ -42,14 +40,13 @@ def generate_image(prompt, file_path):
         "num_inference_steps": 25
     }
     output = replicate.run(
-    "stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc",
-    input=input
-)
+        "stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc",
+        input=input
+    )
     image_url = output[0]
 
     # Download the image
     if image_url:
-        
         response = requests.get(image_url)
         if response.status_code == 200:
             with open(file_path, 'wb') as f:
@@ -106,9 +103,13 @@ def home():
     theory = get_theory()
     return theory
 
-@app.route('/generate_ppt', methods=['GET'])
+@app.route('/generate_ppt', methods=['POST'])
 def generate_ppt():
-    theory = get_theory()
+    theory = request.form.get('theory')  # Retrieve theory from the POST request
+
+    if not theory:
+        theory = get_theory()  # Use AI to generate a default theory if none provided
+
     prs = Presentation()
 
     for i, preset in enumerate(slides_preset):
@@ -162,6 +163,7 @@ def generate_ppt():
     prs.save('generated_presentation.pptx')
 
     return jsonify({'message': 'Presentation generated and saved to local storage as generated_presentation.pptx'})
+
 
 if __name__ == '__main__':
     app.run(debug=True)
