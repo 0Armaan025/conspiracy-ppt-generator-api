@@ -167,3 +167,6 @@ def generate_ppt():
     prs.save(tmp_file)
 
     return send_file(tmp_file, as_attachment=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)
