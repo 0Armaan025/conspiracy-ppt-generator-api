@@ -8,10 +8,12 @@ from pptx.util import Inches, Pt
 import google.generativeai as genai
 import replicate
 import requests
+from flask_cors import CORS
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
 gemini_api_key = os.getenv('GEMINI_API_KEY')
