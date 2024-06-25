@@ -45,7 +45,7 @@ def get_slide_content(slide_number, theory):
         return title_slide1, intro_paragraph
     elif preset == 'bullets':
         bullets_title = title_slide1  # Use the same title as the first slide
-        bullets_title = bullets_title 
+        bullets_title = bullets_title
         bullets = []
         for i in range(3):
             bullet = call_gemini(f'Create a bullet point to prove this theory right in a fun way of course, anything can happen ;) , theory: {theory}. Use easy English, include some real evidence and some false made-up evidence, just for entertainment, make sure the word limit is 30 for it, something fun that would also make them a bit of laugh and convince them that it is the truth')
@@ -88,20 +88,22 @@ def generate_ppt():
         title, content = get_slide_content(i, theory)
 
         if preset == 'title':
-            slide.shapes.title.text = title
+            title_shape = slide.shapes.title
+            title_shape.text = title
+            title_shape.text_frame.paragraphs[0].font.size = Pt(16)  
+            # title_shape.text_frame.paragraphs[0].font.size = Pt(16)
             text_frame = slide.shapes.placeholders[1].text_frame
             text_frame.text = content
-            text_frame.paragraphs[0].font.size = Pt(16)
-            # Add spacing between title and content
-            slide.shapes.placeholders[1].top = Inches(2)
+            text_frame.paragraphs[0].font.size = Pt(13)
+            
         elif preset == 'bullets':
             slide.shapes.title.text = title
-            slide.shapes.title.text_frame.paragraphs[0].font.size = Pt(19)
+            slide.shapes.title.text_frame.paragraphs[0].font.size = Pt(18)  # Set the title font size for the bullet slide
             text_frame = slide.shapes.placeholders[1].text_frame
             for bullet in content:
                 p = text_frame.add_paragraph()
                 p.text = bullet
-                p.font.size = Pt(16)
+                p.font.size = Pt(14)
         elif preset == 'text':
             slide.shapes.title.text = "Details"
             text_frame = slide.shapes.placeholders[1].text_frame
@@ -129,6 +131,7 @@ def generate_ppt():
             p.text = "Thank You!"
             p.font.size = Pt(32)
             p.font.bold = True
+            # Make it look cooler
             
             p.shadow = True
 
